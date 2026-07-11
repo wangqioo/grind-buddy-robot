@@ -56,6 +56,13 @@ public:
         pca9557_->SetOutputState(SZPI_PCA9557_PA_EN_BIT, enable ? 1 : 0);
     }
 
+    void Start() override {
+        BoxAudioCodec::Start();
+        if (output_volume_ < AUDIO_DEFAULT_OUTPUT_VOLUME) {
+            SetOutputVolume(AUDIO_DEFAULT_OUTPUT_VOLUME);
+        }
+    }
+
 private:
     Pca9557* pca9557_;
 };
