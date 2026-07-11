@@ -1,0 +1,31 @@
+# Docker for Local Mac Deployment
+version: '3'
+services:
+  xiaozhi-esp32-server:
+    build:
+      context: .
+      dockerfile: Dockerfile-local
+    container_name: xiaozhi-esp32-server
+    restart: always
+    ports:
+      - "8000:8000"
+      - "8003:8003"
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./data:/opt/xiaozhi-esp32-server/data
+      # Ensure you have downloaded the models! If not, comment this out or run download script.
+      - ./main/xiaozhi-server/models:/opt/xiaozhi-esp32-server/models
+    depends_on:
+      - xiaozhi-esp32-server-redis
+
+  xiaozhi-esp32-server-redis:
+    image: redis:latest
+    container_name: xiaozhi-esp32-server-redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+# Note: Removed MySQL and Web/Manager services for simplicity as requested (Server focus).
+# If you need the full stack (Web Dashboard), we can add them back.
+# For now, this is the minimal set for the Python Server to run with your Auth features.

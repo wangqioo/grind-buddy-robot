@@ -1,0 +1,36 @@
+# Dockerfile-local (For Mac/ARM64 Deployment)
+# 1. Base Setup (From Dockerfile-server-base)
+FROM python:3.10-slim
+
+# Install System Dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libopus0 ffmpeg locales && \
+    sed -i '/zh_CN.UTF-8/s/^# //g' /etc/locale.gen && \
+    locale-gen && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Configure PIP
+RUN pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/ && \
+    pip config set global.trusted-host mirrors.aliyun.com && \
+    pip config set global.timeout 120 && \
+    pip config set install.retries 5
+
+ENV LANG=zh_CN.UTF-8 \
+    LC_ALL=zh_CN.UTF-8 \
+    LANGUAGE=zh_CN:zh \
+    PYTHONIOENCODING=utf-8
+
+WORKDIR /opt/xiaozhi-esp32-server
+
+# 2. Install Python Deps
+COPY main/xiaozhi-server/requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt --default-timeout=120 --retries 5
+
+# 3. Copy Application Code (From Dockerfile-server)
+# We copy the entire directory to include your custom Auth changes
+COPY main/xiaozhi-server .
+
+# 4. Start
+CMD ["python", "app.py"]

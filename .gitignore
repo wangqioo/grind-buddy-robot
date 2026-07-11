@@ -1,0 +1,24 @@
+.DS_Store
+*.log
+*.pyc
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+
+# ESP-IDF / PlatformIO build output
+build*/
+.pio/
+managed_components/
+sdkconfig.old
+
+# Backend local runtime data
+backend/xiaozhi-local/data/
+backend/xiaozhi-local/tmp/
+backend/xiaozhi-local/models/
+backend/xiaozhi-local/.local.env
+
+# Generated caches and databases
+*.db
+*.sqlite
+*.sqlite3

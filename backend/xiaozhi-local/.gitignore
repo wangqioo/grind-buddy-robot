@@ -1,0 +1,27 @@
+.DS_Store
+.local.env
+
+# Firmware local build output and downloaded ESP-IDF components.
+firmware/xiaozhi-esp32/build*/
+firmware/xiaozhi-esp32/managed_components/
+firmware/xiaozhi-esp32/sdkconfig
+firmware/xiaozhi-esp32/sdkconfig.old
+
+# Server secrets and local runtime state.
+server/xiaozhi-esp32-server/data/.config.yaml
+server/xiaozhi-esp32-server/data/.memory.yaml
+server/xiaozhi-esp32-server/data/.wakeup_words.yaml
+server/xiaozhi-esp32-server/main/xiaozhi-server/data
+server/xiaozhi-esp32-server/main/xiaozhi-server/tmp/
+server/xiaozhi-esp32-server/main/xiaozhi-server/models/**/model.pt
+
+# Web/mobile dependency caches and build outputs.
+**/.env
+**/node_modules/
+**/dist/
+**/build/
+**/unpackage/
+
+# Python cache.
+**/__pycache__/
+*.pyc
