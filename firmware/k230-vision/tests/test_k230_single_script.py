@@ -192,6 +192,105 @@ class K230SingleScriptTest(unittest.TestCase):
 
         self.assertEqual(calls, [{}])
 
+    def test_run_initializes_camera_before_foc_uart(self):
+        subprocess.run(
+            [sys.executable, str(ROOT / "tools" / "build_k230_single.py")],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        single = self._load_single_script()
+        events = []
+        single.os.EXITPOINT_ENABLE = object()
+        single.os.exitpoint = lambda *args: None
+        single.time.ticks_ms = lambda: 0
+        single.time.ticks_diff = lambda now, previous: now - previous
+        single.sys.print_exception = lambda error: None
+
+        class FakePipeline:
+            sensor = object()
+
+            def get_frame(self):
+                events.append("frame")
+                raise KeyboardInterrupt()
+
+            def destroy(self):
+                events.append("destroy")
+
+        class FakeDetector:
+            def __init__(self, **kwargs):
+                events.append("detector")
+
+            def deinit(self):
+                events.append("detector.deinit")
+
+        single.init_uart = lambda: MemoryUART()
+
+        def create_pipeline():
+            events.append("camera")
+            return FakePipeline()
+
+        def init_foc_uart():
+            events.append("foc")
+            return MemoryUART()
+
+        single.create_pipeline_with_sensor_fallback = create_pipeline
+        single.HeadPoseDetector = FakeDetector
+        single.init_foc_uart = init_foc_uart
+
+        with self.assertRaises(KeyboardInterrupt):
+            single.run()
+
+        self.assertLess(events.index("camera"), events.index("foc"))
+
+    def test_foc_uart_failure_does_not_abort_vision_loop(self):
+        subprocess.run(
+            [sys.executable, str(ROOT / "tools" / "build_k230_single.py")],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        single = self._load_single_script()
+        events = []
+        single.os.EXITPOINT_ENABLE = object()
+        single.os.exitpoint = lambda *args: None
+        single.time.ticks_ms = lambda: 0
+        single.time.ticks_diff = lambda now, previous: now - previous
+        single.sys.print_exception = lambda error: None
+
+        class FakePipeline:
+            sensor = object()
+
+            def get_frame(self):
+                events.append("frame")
+                raise KeyboardInterrupt()
+
+            def destroy(self):
+                events.append("destroy")
+
+        class FakeDetector:
+            def __init__(self, **kwargs):
+                events.append("detector")
+
+            def deinit(self):
+                events.append("detector.deinit")
+
+        single.init_uart = lambda: MemoryUART()
+        single.create_pipeline_with_sensor_fallback = lambda: FakePipeline()
+        single.HeadPoseDetector = FakeDetector
+
+        def init_foc_uart():
+            events.append("foc.fail")
+            raise RuntimeError("foc unavailable")
+
+        single.init_foc_uart = init_foc_uart
+
+        with self.assertRaises(KeyboardInterrupt):
+            single.run()
+
+        self.assertIn("foc.fail", events)
+        self.assertIn("frame", events)
+
     def test_single_script_publisher_writes_esp32_frames(self):
         subprocess.run(
             [sys.executable, str(ROOT / "tools" / "build_k230_single.py")],

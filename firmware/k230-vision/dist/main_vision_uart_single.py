@@ -720,6 +720,24 @@ def init_foc_uart():
     return UART(UART.UART1, baudrate=FOC_UART_BAUDRATE)
 
 
+class NullFocTrackingPublisher:
+    def publish_observation_if_frontal(self, observation):
+        return 0
+
+    def publish_face_lost(self):
+        return 0
+
+
+def init_foc_tracking():
+    try:
+        foc_uart = init_foc_uart()
+        return foc_uart, FocTrackingPublisher(foc_uart)
+    except Exception as error:
+        print("FOC UART disabled:")
+        sys.print_exception(error)
+        return None, NullFocTrackingPublisher()
+
+
 def make_pipeline():
     return PipeLine(
         rgb888p_size=FRAME_SIZE,
@@ -768,9 +786,9 @@ def create_pipeline_with_sensor_fallback():
 def run():
     os.exitpoint(os.EXITPOINT_ENABLE)
     uart = init_uart()
-    foc_uart = init_foc_uart()
     publisher = VisionPublisher(uart)
-    foc_publisher = FocTrackingPublisher(foc_uart)
+    foc_uart = None
+    foc_publisher = NullFocTrackingPublisher()
     pipeline = None
     detector = None
     last_heartbeat = ticks_ms()
@@ -784,6 +802,7 @@ def run():
             confidence_threshold=0.5,
             nms_threshold=0.2,
         )
+        foc_uart, foc_publisher = init_foc_tracking()
 
         while True:
             os.exitpoint()
