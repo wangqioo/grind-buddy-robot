@@ -46,6 +46,13 @@ tools/
 
 See [docs/hardware-wiring.md](docs/hardware-wiring.md).
 
+Important FOC wiring note: keep the K230-to-FOC UART one-way by default:
+`K230 GPIO3 UART1_TXD -> FOC ESP32 IO16 RX`, plus common ground. Do not connect
+`FOC ESP32 IO17 TX -> K230 GPIO4 UART1_RXD` unless proper isolation/buffering is
+added. With FOC powered first, that return TX line can disturb K230 boot and
+cause `RuntimeError: sensor(0) runerror, vicap init failed(-1)` during camera
+startup.
+
 ## Common Commands
 
 ```bash

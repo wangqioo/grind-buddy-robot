@@ -16,13 +16,32 @@ Protocol              -> binary frames, magic A5 5A, CRC-16/CCITT
 
 Purpose: body/gimbal face tracking.
 
+Recommended wiring is one-way from K230 to the FOC controller:
+
 ```text
 K230 GPIO3 UART1_TXD -> FOC ESP32 IO16 RX
-K230 GPIO4 UART1_RXD <- FOC ESP32 IO17 TX
 GND                  -> GND
 Baud                 -> 115200
 Protocol             -> text commands
 ```
+
+Do not connect `FOC ESP32 IO17 TX -> K230 GPIO4 UART1_RXD` in the current
+bench setup. The FOC link is command-only, and K230 does not need to receive
+data from the FOC controller.
+
+If the FOC controller is powered before K230 while its TX line is connected to
+K230 RX, the ESP32 TX idle level can back-power or disturb the K230 IO domain
+during boot. The observed symptom is K230 failing camera startup with:
+
+```text
+RuntimeError: sensor(0) runerror, vicap init failed(-1)
+```
+
+Safe startup options:
+
+- Preferred: leave FOC TX disconnected and use only `K230 TX -> FOC RX` plus common ground.
+- If bidirectional FOC telemetry is later required, add proper isolation or buffering before reconnecting FOC TX to K230 RX.
+- When debugging with the old bidirectional wiring, power K230 first, wait until the camera pipeline initializes, then power FOC.
 
 Commands sent by K230 to FOC:
 
@@ -37,7 +56,8 @@ K230 only sends `F x,y` when the primary face is frontal. When the face turns aw
 
 ```text
 USB Serial -> manual debug commands
-Serial2 RX IO16 / TX IO17 -> K230 tracking commands
+Serial2 RX IO16 -> K230 tracking commands
+Serial2 TX IO17 -> optional debug/telemetry only; leave disconnected from K230 by default
 ```
 
 Supported FOC commands:
