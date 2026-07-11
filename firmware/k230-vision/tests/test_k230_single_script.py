@@ -167,6 +167,31 @@ class K230SingleScriptTest(unittest.TestCase):
             ),
         )
 
+    def test_camera_pipeline_tries_board_default_sensor_first(self):
+        subprocess.run(
+            [sys.executable, str(ROOT / "tools" / "build_k230_single.py")],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        single = self._load_single_script()
+        calls = []
+
+        class FakePipeline:
+            sensor = object()
+
+            def create(self, **kwargs):
+                calls.append(kwargs)
+
+            def destroy(self):
+                pass
+
+        single.make_pipeline = FakePipeline
+
+        single.create_pipeline_with_sensor_fallback()
+
+        self.assertEqual(calls, [{}])
+
     def test_single_script_publisher_writes_esp32_frames(self):
         subprocess.run(
             [sys.executable, str(ROOT / "tools" / "build_k230_single.py")],

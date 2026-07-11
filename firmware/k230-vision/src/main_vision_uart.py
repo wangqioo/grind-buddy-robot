@@ -28,7 +28,7 @@ FOC_UART_RX_PIN = 4
 FRAME_SIZE = [1920, 1080]
 HEARTBEAT_INTERVAL_MS = 1000
 FACE_LOST_REPEAT_MS = 500
-SENSOR_ID_CANDIDATES = (0, 1, 2)
+SENSOR_ID_CANDIDATES = (None, 0, 1, 2)
 
 
 def ticks_ms():
@@ -73,13 +73,21 @@ def create_pipeline_with_sensor_fallback():
     for sensor_id in SENSOR_ID_CANDIDATES:
         pipeline = make_pipeline()
         try:
-            print("Trying camera sensor_id=%d" % sensor_id)
-            pipeline.create(sensor_id=sensor_id)
-            print("Camera sensor_id=%d initialized" % sensor_id)
+            if sensor_id is None:
+                print("Trying camera default sensor")
+                pipeline.create()
+                print("Camera default sensor initialized")
+            else:
+                print("Trying camera sensor_id=%d" % sensor_id)
+                pipeline.create(sensor_id=sensor_id)
+                print("Camera sensor_id=%d initialized" % sensor_id)
             return pipeline
         except Exception as error:
             last_error = error
-            print("Camera sensor_id=%d failed:" % sensor_id)
+            if sensor_id is None:
+                print("Camera default sensor failed:")
+            else:
+                print("Camera sensor_id=%d failed:" % sensor_id)
             sys.print_exception(error)
             safe_destroy_pipeline(pipeline)
             gc.collect()
