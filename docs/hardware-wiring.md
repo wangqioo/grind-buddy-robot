@@ -60,6 +60,12 @@ Serial2 RX IO16 -> K230 tracking commands
 Serial2 TX IO17 -> optional debug/telemetry only; leave disconnected from K230 by default
 ```
 
+The current Grind Buddy FOC board does not use the BMI160 IMU. The firmware
+keeps `ENABLE_IMU_CONTROL=0` and runs body tracking from AS5600 encoder
+feedback plus serial targets. If BMI160-dependent startup is re-enabled while
+the IMU is unplugged, the FOC firmware will continuously report I2C errors and
+will not respond reliably to tracking commands.
+
 Supported FOC commands:
 
 ```text

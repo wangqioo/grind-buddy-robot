@@ -21,6 +21,10 @@
 //设置报警电压
 #define UNDERVOLTAGE_THRES 11.1
 
+// BMI160 IMU has been removed from the Grind Buddy FOC board.
+// Keep this off so the gimbal can run from AS5600 encoder feedback only.
+#define ENABLE_IMU_CONTROL 0
+
 // 判断是否已经写入过EEPROM 1：需要写入 0：已经写入
 #define Calibration_Flag 0     
 
@@ -225,8 +229,12 @@ void setup() {
   CheckVinVolt();   //电压检测
   DFOC_Vbus(12.6);   //设定驱动器供电电压
 
-  Bmi160Init();
-  CalibrateGyro();
+  #if ENABLE_IMU_CONTROL
+    Bmi160Init();
+    CalibrateGyro();
+  #else
+    Serial.println("IMU disabled; using encoder-only target control");
+  #endif
   preInterval = millis();
     
   DFOC_enable();
@@ -289,7 +297,11 @@ void setup() {
   }
   
   EEPROM.end();
-  now = (DFOC_M0_Angle()*180/PI)- M0_Dir * last_angleY - M0_Dir * 90;   //记录编码器和陀螺仪的差值 -90是因为初始标定的偏差
+  #if ENABLE_IMU_CONTROL
+    now = (DFOC_M0_Angle()*180/PI)- M0_Dir * last_angleY - M0_Dir * 90;   //记录编码器和陀螺仪的差值 -90是因为初始标定的偏差
+  #else
+    now = 0.0f;
+  #endif
   M0_home_angle = DFOC_M0_Angle();
   M1_home_angle = DFOC_M1_Angle();
   M0_target_angle = M0_home_angle;
@@ -306,7 +318,9 @@ void setup() {
   target_demo_segment_start_offset = 0.0f;
   target_demo_goal_offset = TARGET_SWING_AMPLITUDE_DEG * PI / 180.0f;
   // now = (DFOC_M0_Angle()*180/PI)- last_angleY;   //记录编码器和陀螺仪的差值 90是因为初始标定的偏差
-  GetAngle();
+  #if ENABLE_IMU_CONTROL
+    GetAngle();
+  #endif
   Serial.println("初始化完成！");
   if(DRIVE_TEST_MENU)
   {
@@ -979,13 +993,19 @@ void RunDriveTestMode()
       break;
 
     case 6:
-      GetAngle();
-      angle1_error_0 = M0_Dir * last_angleY + now;
-      Torget_0 = Y_Flt(Y_loop(angle1_error_0 - (DFOC_M0_Angle() * 180.0f / PI)));
-      angle1_error_1 = last_angleZ;
-      Torget_1 = Z_Flt(Z_loop(angle1_error_1));
-      DFOC_M0_setTorque(ClampFloat(Torget_0, -TARGET_TORQUE_LIMIT, TARGET_TORQUE_LIMIT));
-      DFOC_M1_setTorque(ClampFloat(M1_Dir * (Torget_1 + 2.9f * sin(last_angleY * PI / 180.0f)), -TARGET_TORQUE_LIMIT, TARGET_TORQUE_LIMIT));
+      #if ENABLE_IMU_CONTROL
+        GetAngle();
+        angle1_error_0 = M0_Dir * last_angleY + now;
+        Torget_0 = Y_Flt(Y_loop(angle1_error_0 - (DFOC_M0_Angle() * 180.0f / PI)));
+        angle1_error_1 = last_angleZ;
+        Torget_1 = Z_Flt(Z_loop(angle1_error_1));
+        DFOC_M0_setTorque(ClampFloat(Torget_0, -TARGET_TORQUE_LIMIT, TARGET_TORQUE_LIMIT));
+        DFOC_M1_setTorque(ClampFloat(M1_Dir * (Torget_1 + 2.9f * sin(last_angleY * PI / 180.0f)), -TARGET_TORQUE_LIMIT, TARGET_TORQUE_LIMIT));
+      #else
+        StopDriveTestOutput();
+        Serial.println("ERR,MODE 6 requires ENABLE_IMU_CONTROL");
+        drive_test_running = false;
+      #endif
       break;
 
     default:
