@@ -1,0 +1,52 @@
+# Copy this file to data/.config.yaml and fill in your LAN IP, device MAC and API keys.
+# Do not commit data/.config.yaml.
+
+server:
+  ip: 0.0.0.0
+  port: 8001
+  http_port: 8003
+  websocket: ws://YOUR_MAC_LAN_IP:8001/xiaozhi/v1/
+  vision_explain: http://YOUR_MAC_LAN_IP:8003/mcp/vision/explain
+  auth:
+    enabled: true
+    allowed_devices:
+      - "AA:BB:CC:DD:EE:FF"
+
+selected_module:
+  VAD: SileroVAD
+  ASR: FunASR
+  LLM: ChatGLMLLM
+  VLLM: ChatGLMVLLM
+  TTS: EdgeTTS
+  Memory: nomem
+  Intent: function_call
+
+ASR:
+  FunASR:
+    type: fun_local
+    model_dir: models/SenseVoiceSmall
+    output_dir: tmp/
+
+LLM:
+  ChatGLMLLM:
+    type: openai
+    url: https://open.bigmodel.cn/api/paas/v4/
+    model_name: glm-4-flash
+    api_key: YOUR_GLM_API_KEY
+
+VLLM:
+  ChatGLMVLLM:
+    type: openai
+    url: https://open.bigmodel.cn/api/paas/v4/
+    model_name: glm-4v-flash
+    api_key: YOUR_GLM_API_KEY
+
+TTS:
+  EdgeTTS:
+    type: edge
+    voice: zh-CN-XiaoxiaoNeural
+    output_dir: tmp/
+
+Memory:
+  nomem:
+    type: nomem
