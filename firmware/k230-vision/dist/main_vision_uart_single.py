@@ -699,6 +699,7 @@ FOC_UART_RX_PIN = 4
 FRAME_SIZE = [1920, 1080]
 HEARTBEAT_INTERVAL_MS = 1000
 FACE_LOST_REPEAT_MS = 500
+SENSOR_ID_CANDIDATES = (0, 1, 2)
 
 
 def ticks_ms():
@@ -719,23 +720,56 @@ def init_foc_uart():
     return UART(UART.UART1, baudrate=FOC_UART_BAUDRATE)
 
 
+def make_pipeline():
+    return PipeLine(
+        rgb888p_size=FRAME_SIZE,
+        display_size=[800, 480],
+        display_mode="lcd",
+    )
+
+
+def safe_destroy_pipeline(pipeline):
+    if not pipeline:
+        return
+    try:
+        if getattr(pipeline, "sensor", None) is None:
+            return
+        pipeline.destroy()
+    except Exception as error:
+        print("pipeline destroy ignored:", error)
+
+
+def create_pipeline_with_sensor_fallback():
+    last_error = None
+    for sensor_id in SENSOR_ID_CANDIDATES:
+        pipeline = make_pipeline()
+        try:
+            print("Trying camera sensor_id=%d" % sensor_id)
+            pipeline.create(sensor_id=sensor_id)
+            print("Camera sensor_id=%d initialized" % sensor_id)
+            return pipeline
+        except Exception as error:
+            last_error = error
+            print("Camera sensor_id=%d failed:" % sensor_id)
+            sys.print_exception(error)
+            safe_destroy_pipeline(pipeline)
+            gc.collect()
+    raise last_error
+
+
 def run():
     os.exitpoint(os.EXITPOINT_ENABLE)
     uart = init_uart()
     foc_uart = init_foc_uart()
     publisher = VisionPublisher(uart)
     foc_publisher = FocTrackingPublisher(foc_uart)
-    pipeline = PipeLine(
-        rgb888p_size=FRAME_SIZE,
-        display_size=[800, 480],
-        display_mode="lcd",
-    )
+    pipeline = None
     detector = None
     last_heartbeat = ticks_ms()
     last_face_lost = -FACE_LOST_REPEAT_MS
 
     try:
-        pipeline.create()
+        pipeline = create_pipeline_with_sensor_fallback()
         detector = HeadPoseDetector(
             rgb888p_size=FRAME_SIZE,
             display_size=[800, 480],
@@ -778,7 +812,7 @@ def run():
     finally:
         if detector:
             detector.deinit()
-        pipeline.destroy()
+        safe_destroy_pipeline(pipeline)
         try:
             uart.deinit()
         except Exception:
