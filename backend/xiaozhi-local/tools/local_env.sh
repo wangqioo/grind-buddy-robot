@@ -56,6 +56,8 @@ require_local_env_value() {
 
 require_local_env() {
   require_local_env_value XIAOZHI_LAN_IP
-  require_local_env_value XIAOZHI_DEVICE_MAC
+  if [[ -z "${XIAOZHI_DEVICE_MACS:-}" ]]; then
+    require_local_env_value XIAOZHI_DEVICE_MAC
+  fi
   require_local_env_value XIAOZHI_GLM_API_KEY
 }

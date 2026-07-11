@@ -16,7 +16,10 @@ cp .local.env.example .local.env
 Edit `.local.env` with local values:
 
 - `XIAOZHI_LAN_IP`: LAN IP reachable by the ESP32-S3.
-- `XIAOZHI_DEVICE_MAC`: ESP32-S3 device MAC address.
+- `XIAOZHI_DEVICE_MAC`: primary ESP32-S3 device MAC address.
+- `XIAOZHI_DEVICE_MACS`: optional comma-separated whitelist for multiple
+  ESP32-S3 main controllers. Set this when both bench boards should skip
+  activation.
 - `XIAOZHI_GLM_API_KEY`: Zhipu BigModel-compatible API key.
 - `XIAOZHI_WS_PORT`: WebSocket port, default `8001`.
 - `XIAOZHI_HTTP_PORT`: HTTP OTA port, default `8003`.

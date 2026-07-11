@@ -50,6 +50,18 @@ XIAOZHI_HTTP_PORT=18003
 ENV
 }
 
+write_multi_device_local_env() {
+  local root="$1"
+  cat > "${root}/.local.env" <<'ENV'
+XIAOZHI_LAN_IP=10.0.0.42
+XIAOZHI_DEVICE_MAC=22:33:44:55:66:77
+XIAOZHI_DEVICE_MACS=22:33:44:55:66:77,88:99:aa:bb:cc:dd
+XIAOZHI_GLM_API_KEY=testglmkey1234567890.secretpart123456
+XIAOZHI_WS_PORT=18001
+XIAOZHI_HTTP_PORT=18003
+ENV
+}
+
 test_missing_local_env_fails() {
   local tmp out
   tmp="$(mktemp -d)"
@@ -121,6 +133,20 @@ test_render_config_from_local_env() {
   assert_not_contains "$config" "YOUR_GLM_API_KEY"
 }
 
+test_render_config_from_multi_device_local_env() {
+  local tmp config
+  tmp="$(mktemp -d)"
+  config="${tmp}/server/xiaozhi-esp32-server/data/.config.yaml"
+  make_fixture "$tmp"
+  write_multi_device_local_env "$tmp"
+
+  XIAOZHI_STACK_ROOT="$tmp" bash "$RENDER" >/dev/null
+
+  assert_contains "$config" "- \"22:33:44:55:66:77\""
+  assert_contains "$config" "- \"88:99:aa:bb:cc:dd\""
+  assert_not_contains "$config" "AA:BB:CC:DD:EE:FF"
+}
+
 test_render_firmware_defaults() {
   local tmp defaults
   tmp="$(mktemp -d)"
@@ -180,6 +206,7 @@ YAML
 test_missing_local_env_fails
 test_init_stack_facts_exports_default_paths
 test_render_config_from_local_env
+test_render_config_from_multi_device_local_env
 test_render_firmware_defaults
 test_render_firmware_defaults_lan_ip_overrides_local_env
 test_render_firmware_defaults_accepts_lan_ip_without_local_env
