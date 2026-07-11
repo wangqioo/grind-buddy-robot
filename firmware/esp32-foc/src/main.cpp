@@ -47,7 +47,8 @@
 #define SERIAL_DEBUG_INTERVAL_MS 250UL
 #define FOC_COMMAND_UART_BAUD_RATE 115200
 #define FOC_COMMAND_UART_RX_PIN 16
-#define FOC_COMMAND_UART_TX_PIN 17
+// K230 -> FOC is command-only. Disable Serial2 TX so IO17 never drives K230 RX.
+#define FOC_COMMAND_UART_TX_PIN -1
 #define VISION_M0_MIN_DEG -90.0f
 #define VISION_M0_MAX_DEG 90.0f
 #define VISION_M1_MIN_DEG -180.0f
@@ -746,7 +747,7 @@ void PrintSerialControlHelp()
 {
   Serial.println("CMD,T m0_deg,m1_deg  e.g. T 30,-20");
   Serial.println("CMD,F face_center_x,face_center_y / T angle / M0 angle / M1 angle / H / S / ?");
-  Serial.println("UART,USB Serial and Serial2 RX=16 TX=17");
+  Serial.println("UART,USB Serial and Serial2 RX=16 TX=disabled");
   Serial.println("UNIT,absolute degree relative to power-on home");
   Serial.print("LIMIT,M0,");
   Serial.print(VISION_M0_MIN_DEG, 1);
