@@ -310,6 +310,13 @@ exec(open("/sdcard/pet/main_vision_uart_single.py").read())
 
 ### ESP32-S3 主控
 
+主控固件支持两块开发板，在 `idf.py menuconfig` 的 Board Type 里选择：
+
+- `szpi-s3`：立创系裸开发板，ST7789 320x240 横屏，ES8311+ES7210，无板载摄像头。
+- `zhengchen-minicam`：征辰 minicam 开发板，ST7789 240x320 竖屏，ES8388，
+  板载 DVP 摄像头座、电池 ADC 和音量键。差异详见
+  [板型说明](../firmware/esp32s3-main/main/boards/zhengchen-minicam/README.md)。
+
 ```bash
 cd firmware/esp32s3-main
 . /Users/wq/esp-idf/export.sh
