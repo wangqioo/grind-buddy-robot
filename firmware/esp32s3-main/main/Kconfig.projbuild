@@ -14,7 +14,7 @@ config GRIND_BUDDY_DEFAULT_WIFI_SSID
 
 config GRIND_BUDDY_DEFAULT_WIFI_PASSWORD
     string "Grind Buddy default WiFi password"
-    default "Ldkj1234"
+    default "ldkj1234"
     help
         Optional bench WiFi password paired with GRIND_BUDDY_DEFAULT_WIFI_SSID.
 
