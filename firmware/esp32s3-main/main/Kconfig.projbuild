@@ -8,13 +8,13 @@ config OTA_URL
 
 config GRIND_BUDDY_DEFAULT_WIFI_SSID
     string "Grind Buddy default WiFi SSID"
-    default ""
+    default "LDKJ"
     help
         Optional bench WiFi SSID to seed into NVS when no WiFi credentials exist.
 
 config GRIND_BUDDY_DEFAULT_WIFI_PASSWORD
     string "Grind Buddy default WiFi password"
-    default ""
+    default "Ldkj1234"
     help
         Optional bench WiFi password paired with GRIND_BUDDY_DEFAULT_WIFI_SSID.
 
